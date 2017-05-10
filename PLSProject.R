@@ -1,5 +1,8 @@
+
+rm(list=ls())
+
 # Set the directory
-setwd("C:\\Users\\m2016074\\Desktop")
+setwd("C:\\Users\\Ricardo\\Sync\\NOVA\\Second semester\\Descriptive analytics - Estadistica l\\Final project")
 
 #read and discover the data 
 bank = read.csv("bank.csv")
@@ -7,7 +10,7 @@ summary(bank)
 
 #Remove the missing rows from the dataset
 bank2 <- bank[rowSums(is.na(bank)) != ncol(bank)-1, ]
-
+summary(bank2)
 #check how many variables are missing in total 
 nrow(bank) - nrow(bank2)
 
@@ -15,6 +18,7 @@ nrow(bank) - nrow(bank2)
 bank2$ID = 1:nrow(bank2)
 
 #Imputing missing values with pmm method and with R package of Mice
+install.packages("mice")
 library(mice)
 
 #The data set with different imputations of missing values 
@@ -27,6 +31,7 @@ TempMiss$imp$IMAG2
 #Imputed bank data set with the first imputation among the 10
 ImputedBank = complete(TempMiss)
 ImputedBank = ImputedBank[,c(2:25)]
+summary(ImputedBank)
 
 # Building the Inner Model
 InModel = matrix(c("Image", "Loyalty", "Image", "Expectations", "Image",
@@ -60,16 +65,15 @@ PathCoeffs = matrix(rep(0,NbLatentVariables*NbLatentVariables), nrow = NbLatentV
 colnames(PathCoeffs) = LatentVariables
 rownames(PathCoeffs) = LatentVariables
 
-#Verctor of occurences of each latentVariable
+
+#Vector of occurences of each latentVariable
+NbManifestPerLatent = c(rep(0,length(LatentVariables)))
 for(i in 1:length(LatentVariables)){
   NbManifestPerLatent[i] = c(length(grep(LatentVariables[i], OutModel[,1])));
 }
 
 #Temporary Vector of weights
 WeightsTemp = c(rep(1/24,24))
-
-#Cummulated nb of manifest variables per Latent
-CumulatedNbManifestPerLatent = c(1,cumsum(NbManifestPerLatent))
 
 
 #List of Weights Per Latent variable

@@ -1,0 +1,512 @@
+OutModel
+# Set the directory
+setwd("C:\\Users\\m2016074\\Desktop")
+#read and discover the data
+bank = read.csv("bank.csv")
+summary(bank)
+#Remove the missing rows from the dataset
+bank2 <- bank[rowSums(is.na(bank)) != ncol(bank)-1, ]
+#check how many variables are missing in total
+nrow(bank) - nrow(bank2)
+#Clean the ID column
+bank2$ID = 1:nrow(bank2)
+#Imputing missing values with pmm method and with R package of Mice
+install.packages("mice")
+library(mice)
+#The data set with different imputations of missing values
+TempMiss = mice(bank2, m=10, method = "pmm", maxit = 50, seed = 500 )
+# Set the directory
+setwd("C:\\Users\\m2016074\\Desktop")
+#read and discover the data
+bank = read.csv("bank.csv")
+summary(bank)
+#Remove the missing rows from the dataset
+bank2 <- bank[rowSums(is.na(bank)) != ncol(bank)-1, ]
+#check how many variables are missing in total
+nrow(bank) - nrow(bank2)
+#Clean the ID column
+bank2$ID = 1:nrow(bank2)
+#Imputing missing values with pmm method and with R package of Mice
+library(mice)
+#The data set with different imputations of missing values
+TempMiss = mice(bank2, m=10, method = "pmm", maxit = 50, seed = 500 )
+#some variable imputations (each with 10 imputation values for each missing value)
+TempMiss$imp$IMAG1
+TempMiss$imp$IMAG2
+#Imputed bank data set with the first imputation among the 10
+ImputedBank = complete(TempMiss)
+# Building the Inner Model
+InModel = matrix(c("Image", "Loyalty", "Image", "Expectations", "Image",
+"Satisfaction", "Expectations", "Quality", "Expectations", "Value", "Expectations", "Satisfaction", "Quality",
+"Satisfaction", "Quality", "Value", "Value", "Satisfaction", "Satisfaction", "Loyalty"), ncol=2, byrow = TRUE)
+InModel
+colnames(InModel) = c("Source", "Target")
+# Building the Outer Model
+OutModel = matrix(c("Image", "IMAG1", "Image", "IMAG2","Image", "IMAG3",	"Image", "IMAG4","Image", "IMAG5"
+, "Expectations","EXPE1",	"Expectations", "EXPE2", "Expectations", "EXPE3",
+"Quality", "QUAL1",	"Quality", "QUAL2",	"Quality", "QUAL3", "Quality", "QUAL4",	"Quality", "QUAL5",
+"Quality", "QUAL6", "Quality", "QUAL7", "Quality", "QUAL8", "Quality","QUAL9", "Value",	"VALU1","Value","VALU2",
+"Satisfaction","SATI1", "Satisfaction", "SATI2" ,"Satisfaction", "SATI3", "Loyalty", "LOYA1", "Loyalty",	"LOYA2"),ncol=2,byrow = TRUE)
+OutModel
+colnames(OutModel) = c("Source", "Target")
+distinct(OutModel, OutModel[,1])
+?distinct
+unique(OutModel[,1])
+LatentVariables = unique(OutModel[,1])
+length(LatentVariables)
+ncol(bank2[2:25])
+summary(bank2[2:25])
+OutModel[,2]
+length(ManifestVariables)
+ManifestVariables = OutModel[,2]
+NbManifestVariables = length(ManifestVariables)
+NbManifestVariables
+PlsWeights = matrix(rep("-",NbManifestVariables*NbLatentVariables), nrow = NbManifestVariables, nrow = NbLatentVariables)
+colnames(PlsWeights) = LatentVariables
+rownames(PlsWeights) = ManifestVariables
+PlsWeights = matrix(rep("-",NbManifestVariables*NbLatentVariables), nrow = NbManifestVariables, ncol = NbLatentVariables)
+colnames(PlsWeights) = LatentVariables
+rownames(PlsWeights) = ManifestVariables
+LatentVariables = unique(OutModel[,1])
+ManifestVariables = OutModel[,2]
+NbLatentVariables = length(LatentVariables)
+NbManifestVariables = length(ManifestVariables)
+PlsWeights = matrix(rep("-",NbManifestVariables*NbLatentVariables), nrow = NbManifestVariables, ncol = NbLatentVariables)
+colnames(PlsWeights) = LatentVariables
+rownames(PlsWeights) = ManifestVariables
+PlsWeights
+PlsWeights = matrix(rep(.,NbManifestVariables*NbLatentVariables), nrow = NbManifestVariables, ncol = NbLatentVariables)
+colnames(PlsWeights) = LatentVariables
+rownames(PlsWeights) = ManifestVariables
+PlsWeights = matrix(rep('.',NbManifestVariables*NbLatentVariables), nrow = NbManifestVariables, ncol = NbLatentVariables)
+colnames(PlsWeights) = LatentVariables
+rownames(PlsWeights) = ManifestVariables
+PlsWeights
+PlsWeights = matrix(rep(0,NbManifestVariables*NbLatentVariables), nrow = NbManifestVariables, ncol = NbLatentVariables)
+colnames(PlsWeights) = LatentVariables
+rownames(PlsWeights) = ManifestVariables
+PlsWeights
+PlsWeights[Expectations]
+PathCoeffs = matrix(rep(0,NbLatentVariables*NbLatentVariables), nrow = NbLatentVariables, ncol = NbLatentVariables)
+colnames(PathCoeffs) = LatentVariables
+rownames(PathCoeffs) = LatentVariables
+PathCoeffs
+table(PlsWeights)
+table(OutModel)
+table(OutModel[,1])
+?tapply
+table(OutModel[1,1])
+?table
+table(OutModel[,1]=="Image")
+class(table(OutModel[,1]))
+Freq = class(table(OutModel[,1]))
+Freq[1]
+Freq[1,1]
+Freq = table(OutModel[,1])
+Freq[1]
+Freq[2]
+Freq[2,2]
+Freq[2] +3
+5 < Freq[2]
+length(grep("Image", OutModel[,1]))
+length(grep(LatentVariables, OutModel[,1]))
+c(length(grep(LatentVariables, OutModel[,1])))
+c(length(grep(LatentVariables[1], OutModel[,1])))
+c(length(grep(LatentVariables[2], OutModel[,1])))
+c(length(grep(LatentVariables[3], OutModel[,1])))
+c(length(grep(LatentVariables[4], OutModel[,1])))
+c(length(grep(LatentVariables[5], OutModel[,1])))
+c(length(grep(LatentVariables[6], OutModel[,1])))
+c(length(grep(LatentVariables[7], OutModel[,1])))
+(length(grep(LatentVariables[7], OutModel[,1]))
+length(grep(LatentVariables[7], OutModel[,1]))
+length(grep(LatentVariables[7], OutModel[,1]))
+length(grep(LatentVariables[4], OutModel[,1]))
+for(i in 1:length(LatentVariables)){
+NbManifestPerLatent = c(length(grep(LatentVariables[i])));
+}
+for(i in 1:length(LatentVariables)){
+NbManifestPerLatent = c(length(grep(LatentVariables[i]), OutModel[,1]));
+}
+for(i in 1:length(LatentVariables)){
+NbManifestPerLatent = c(length(grep(LatentVariables[i], OutModel[,1])));
+}
+NbManifestPerLatent
+for(i in 1:length(LatentVariables)){
+NbManifestPerLatent[i] = c(length(grep(LatentVariables[i], OutModel[,1])));
+}
+NbManifestPerLatent
+OutModel
+bank2[1,]
+ImputedBank[2,]
+WeightsTemp = c(rep(1/24,24))
+WeightsTemp = c(rep(1/24,24))
+class(ImputedBank)
+cumsum(NbManifestPerLatent)
+c(1,cumsum(NbManifestPerLatent))
+CumulatedNbManifestPerLatent = c(1,cumsum(NbManifestPerLatent))
+for(i in 1:length(ManifestVariables)){
+Y[i] = WeightsTemp[i] * ImputedBank[,i]
+}
+Y = c(rep(0,NbManifestVariables))
+for(i in 1:length(ManifestVariables)){
+Y[i] = WeightsTemp[i] * ImputedBank[,i]
+}
+warning()
+Y
+2 * c(2,4,6)
+c(ImputedBank[,[2:5]], ImputedBank[,[6:8]])
+ImputedBank[,[2:5]]
+ImputedBank[,c(2:5)]
+VectorofDF = c(ImputedBank[,c(2:5)], ImputedBank[,c(6:8)])
+for(i in 1:length(CumulatedNbManifestPerLatent)-1){
+if(i==1){
+Y[i] = ImputedBank[,c(CumulatedNbManifestPerLatent[i],CumulatedNbManifestPerLatent[i+1])]
+}
+else{
+Y[i] = ImputedBank[,c(CumulatedNbManifestPerLatent[i]+1, CumulatedNbManifestPerLatent[i+1])]
+}
+}
+Y[1]
+summary(Y[1])
+rm(VectorofDF)
+rm(Y)
+for(i in 1:length(CumulatedNbManifestPerLatent)-1){
+if(i==1){
+YTemp = ImputedBank[,c(CumulatedNbManifestPerLatent[i],CumulatedNbManifestPerLatent[i+1])]
+Y = c(YTemp)
+}
+else{
+YTemp = ImputedBank[,c(CumulatedNbManifestPerLatent[i]+1, CumulatedNbManifestPerLatent[i+1])]
+Y = c(Y,YTemp)
+}
+}
+?list()
+Y = list(data.frame())
+Y = list(data.frame())
+for(i in 1:length(CumulatedNbManifestPerLatent)-1){
+if(i==1){
+YTemp = ImputedBank[,c(CumulatedNbManifestPerLatent[i],CumulatedNbManifestPerLatent[i+1])]
+Y = c(YTemp)
+}
+else{
+YTemp = ImputedBank[,c(CumulatedNbManifestPerLatent[i]+1, CumulatedNbManifestPerLatent[i+1])]
+Y = c(Y,YTemp)
+}
+}
+YTemp = list(data.frame())
+for(i in 1:length(CumulatedNbManifestPerLatent)-1){
+if(i==1){
+YTemp[i] = ImputedBank[,c(CumulatedNbManifestPerLatent[i],CumulatedNbManifestPerLatent[i+1])]
+}
+else{
+YTemp[i] = ImputedBank[,c(CumulatedNbManifestPerLatent[i]+1, CumulatedNbManifestPerLatent[i+1])]
+}
+}
+ImputedBank[1,]
+YTemp[1]
+YTemp[1][1,]
+YTemp[1](1)
+YTemp[2]
+for(i in 1:length(CumulatedNbManifestPerLatent)-1){
+if(i==1){
+YTemp[i] = ImputedBank[,c(CumulatedNbManifestPerLatent[i],CumulatedNbManifestPerLatent[i+1])]
+}
+else{
+YTemp[i] = ImputedBank[,c(CumulatedNbManifestPerLatent[i]+1, CumulatedNbManifestPerLatent[i+1])]
+}
+}
+rm(YTemp,Y)
+VectorofDF = c(ImputedBank[,c(2:5)], ImputedBank[,c(6:8)])
+ImputedBank[,c(2:5)]
+VectorofDF = list(ImputedBank[,c(2:5)], ImputedBank[,c(6:8)])
+summary(ImputedBank)
+ImputedBank = ImputedBank[,c(2:25)]
+YTemp = list()
+for(i in 1:length(CumulatedNbManifestPerLatent)-1){
+if(i==1){
+YTemp[[i]] = ImputedBank[,c(CumulatedNbManifestPerLatent[i],CumulatedNbManifestPerLatent[i+1])]
+}
+else{
+YTemp[[i]] = ImputedBank[,c(CumulatedNbManifestPerLatent[i]+1, CumulatedNbManifestPerLatent[i+1])]
+}
+}
+YTemp = list()
+for(i in 1:length(CumulatedNbManifestPerLatent)-1){
+if(i==1){
+YTemp[i] = ImputedBank[,c(CumulatedNbManifestPerLatent[i],CumulatedNbManifestPerLatent[i+1])]
+}
+else{
+YTemp[i] = ImputedBank[,c(CumulatedNbManifestPerLatent[i]+1, CumulatedNbManifestPerLatent[i+1])]
+}
+}
+for(i in 1:length(CumulatedNbManifestPerLatent)-1){
+if(i==1){
+YTemp = list(ImputedBank[,c(CumulatedNbManifestPerLatent[i],CumulatedNbManifestPerLatent[i+1])])
+}
+else{
+YTemp[[i]] = ImputedBank[,c(CumulatedNbManifestPerLatent[i]+1, CumulatedNbManifestPerLatent[i+1])]
+}
+}
+for(i in 1:length(CumulatedNbManifestPerLatent)-1){
+if(i==1){
+YTemp = list(ImputedBank[,c(CumulatedNbManifestPerLatent[i],CumulatedNbManifestPerLatent[i+1])])
+}
+else{
+YTemp[i] = ImputedBank[,c(CumulatedNbManifestPerLatent[i]+1, CumulatedNbManifestPerLatent[i+1])]
+}
+}
+CumulatedNbManifestPerLatent[1]
+CumulatedNbManifestPerLatent[2]
+VectorofDF = list(ImputedBank[,c(2:5)], ImputedBank[,c(6:8)])
+VectorofDF = list(ImputedBank[,c(1:5)], ImputedBank[,c(6:8)])
+seq(1,3)
+for(i in 1:length(CumulatedNbManifestPerLatent)-1){
+if(i==1){
+YTemp = list(ImputedBank[,seq(CumulatedNbManifestPerLatent[i],CumulatedNbManifestPerLatent[i+1])])
+}
+else{
+YTemp[i] = ImputedBank[,seq(CumulatedNbManifestPerLatent[i]+1, CumulatedNbManifestPerLatent[i+1])]
+}
+}
+for(i in 1:length(CumulatedNbManifestPerLatent)-1){
+if(i==1){
+YTemp = list(ImputedBank[,c(CumulatedNbManifestPerLatent[i],CumulatedNbManifestPerLatent[i+1])])
+}
+else{
+YTemp[[i]] = ImputedBank[,c(CumulatedNbManifestPerLatent[i]+1, CumulatedNbManifestPerLatent[i+1])]
+}
+}
+for(i in 1:length(CumulatedNbManifestPerLatent)-1){
+if(i==1){
+YTemp = list(ImputedBank[,seq(CumulatedNbManifestPerLatent[i],CumulatedNbManifestPerLatent[i+1],by = 1)])
+}
+else{
+YTemp[[i]] = ImputedBank[,seq(CumulatedNbManifestPerLatent[i]+1, CumulatedNbManifestPerLatent[i+1],by = 1)]
+}
+}
+DFPerLatent  = list(ImputedBank[,c(1:5)], ImputedBank[,c(6:8)], ImputedBank[,c(9:17)],
+ImputedBank[,c(18:19)],ImputedBank[,c(19:22)], ImputedBank[,c(22:24)])
+DFPerLatent  = list(ImputedBank[,c(1:5)], ImputedBank[,c(6:8)], ImputedBank[,c(9:17)],
+ImputedBank[,c(18:19)],ImputedBank[,c(20:22)], ImputedBank[,c(23:24)])
+DFPerLatent[1]
+DFPerLatent[1]$Image1
+DFPerLatent[1]$IMAG1
+DFPerLatent[1][,1]
+DFPerLatent[[1]]
+DFPerLatent[[1]][,1]
+Y = matrix(rep(0,NbLatentVariables*NbManifestVariables),nrow = NbManifestPerLatent, ncol = NbLatentVariables)
+Y = matrix(c(rep(0,NbLatentVariables*NbManifestVariables),nrow = NbManifestPerLatent, ncol = NbLatentVariables))
+for(i in 1:length(CumulatedNbManifestPerLatent)-1){
+if(i==1){
+YTemp = list(ImputedBank[,c(CumulatedNbManifestPerLatent[i]:CumulatedNbManifestPerLatent[i+1])])
+}
+else{
+YTemp[[i]] = ImputedBank[,c(CumulatedNbManifestPerLatent[i]+1:CumulatedNbManifestPerLatent[i+1])]
+}
+}
+for(i in 1:length(CumulatedNbManifestPerLatent)-1){
+if(i==1){
+YTemp = list(ImputedBank[,c(CumulatedNbManifestPerLatent[i]:CumulatedNbManifestPerLatent[i+1])])
+}
+else{
+YTemp[[i]] = list(ImputedBank[,c(CumulatedNbManifestPerLatent[i]+1:CumulatedNbManifestPerLatent[i+1])])
+}
+}
+for(i in 1:length(CumulatedNbManifestPerLatent)-1){
+if(i==1){
+YTemp = list(ImputedBank[,c(CumulatedNbManifestPerLatent[i]:CumulatedNbManifestPerLatent[i+1])])
+}
+else{
+YTemp[i] = ImputedBank[,c(CumulatedNbManifestPerLatent[i]+1:CumulatedNbManifestPerLatent[i+1])]
+}
+}
+for(i in 1:length(CumulatedNbManifestPerLatent)-1){
+if(i==1){
+YTemp = list(ImputedBank[,c(CumulatedNbManifestPerLatent[i]:CumulatedNbManifestPerLatent[i+1])])
+}
+else{
+YTemp = list(YTemp, ImputedBank[,c(CumulatedNbManifestPerLatent[i]+1:CumulatedNbManifestPerLatent[i+1])])
+}
+}
+for(i in 1:length(CumulatedNbManifestPerLatent)-1){
+if(i==1){
+YTemp = list(ImputedBank[,c(CumulatedNbManifestPerLatent[i]:CumulatedNbManifestPerLatent[i+1])])
+}
+else{
+YTemp = list(YTemp, ImputedBank[,(c(CumulatedNbManifestPerLatent[i]+1):CumulatedNbManifestPerLatent[i+1])])
+}
+}
+for(i in 1:length(CumulatedNbManifestPerLatent)-1){
+if(i==1){
+YTemp = list(ImputedBank[,c(CumulatedNbManifestPerLatent[i]:CumulatedNbManifestPerLatent[i+1])])
+}
+else{
+YTemp = list(YTemp, ImputedBank[,(c(CumulatedNbManifestPerLatent[i]+1):CumulatedNbManifestPerLatent[i+1])])
+}
+}
+for(i in 1:length(CumulatedNbManifestPerLatent)-1){
+if(i==1){
+YTemp = list(ImputedBank[,c(CumulatedNbManifestPerLatent[i]:CumulatedNbManifestPerLatent[i+1])])
+}
+else{
+YTemp = list(YTemp, ImputedBank[,(c(CumulatedNbManifestPerLatent[i]+1):CumulatedNbManifestPerLatent[i+1])])
+}
+}
+for(i in 1:length(CumulatedNbManifestPerLatent)-1){
+for(i in 1:length(CumulatedNbManifestPerLatent)-1){
+if(i==1){
+YTemp = list(ImputedBank[,c(CumulatedNbManifestPerLatent[i]:CumulatedNbManifestPerLatent[i+1])])
+}
+else{
+YTemp = list(YTemp, ImputedBank[,(c(CumulatedNbManifestPerLatent[i]+1):CumulatedNbManifestPerLatent[i+1])])
+}
+}
+for(i in 1:length(CumulatedNbManifestPerLatent)-1){
+if(i==1){
+YTemp = list(ImputedBank[,c(CumulatedNbManifestPerLatent[i]:CumulatedNbManifestPerLatent[i+1])])
+}
+else{
+YTemp = list(YTemp, ImputedBank[,(c(CumulatedNbManifestPerLatent[i]+1):CumulatedNbManifestPerLatent[i+1])])
+}
+}
+debugSource('C:/Users/m2016074/Desktop/PLSProject.R')
+for(i in 1:length(CumulatedNbManifestPerLatent)-1){
+if(i==1){
+YTemp = list(ImputedBank[,c(CumulatedNbManifestPerLatent[i]:CumulatedNbManifestPerLatent[i+1])])
+}
+else{
+YTemp = c(YTemp, ImputedBank[,c(CumulatedNbManifestPerLatent[i]+1:CumulatedNbManifestPerLatent[i+1])])
+}
+}
+YTemp = list()
+for(i in 1:length(CumulatedNbManifestPerLatent)-1){
+if(i==1){
+YTemp[[i]] = list(ImputedBank[,c(CumulatedNbManifestPerLatent[i]:CumulatedNbManifestPerLatent[i+1])])
+}
+else{
+YTemp[[i]] = c(YTemp, ImputedBank[,c(CumulatedNbManifestPerLatent[i]+ 1:CumulatedNbManifestPerLatent[i+1])])
+}
+}
+l = c(1,2,3,4,5,6,7,8,9)
+l[-c(1,2)]
+l
+l[-c(1:3)]
+WeightsTemp2 = WeightsTemp
+WeightsPerLatent = list()
+for(i in 1:NbLatentVariables){
+WeightsPerLatent[[i]] = WeightsTemp2[1:NbManifestPerLatent[i]]
+WeightsTemp2 = WeightsTemp2[-c(1:NbManifestPerLatent[i])]
+}
+WeightsTemp2
+summary(ImputedBank[-c(1:3)])
+BankSetPerLatent = list()
+CopyImputedBank = ImputedBank
+for(i in 1:NbLatentVariables){
+BankSetPerLatent[[i]] = CopyImputedBank[,c(1:NbManifestPerLatent[i])]
+CopyImputedBank = CopyImputedBank[-c(1:NbManifestPerLatent[i])]
+}
+rm(DFPerLatent)
+rm(YTemp)
+length(BankSetPerLatent)
+nrow(BankSetPerLatent)
+nrow(ImputedBank)
+#Initialisation of Y1..Yn
+for(i in 1:length(BankSetPerLatent)){
+Y[[i]] = c(rep(0,nrow(ImputedBank)))
+}
+#Summing sigma (wi*Xi)
+for(i in 1:length(BankSetPerLatent)){
+for(j in 1:length(WeightsPerLatent[[i]])){
+Y[[i]] = Y[[i]] + WeightsPerLatent[[i]][j]*BankSetPerLatent[[i]][,j]
+}
+}
+for(i in 1:length(BankSetPerLatent)){
+Y[[i]] = c(rep(0,nrow(ImputedBank)))
+}
+#Build Y1...Yn
+Y = list()
+#Initialisation of Y1..Yn
+for(i in 1:length(BankSetPerLatent)){
+Y[[i]] = c(rep(0,nrow(ImputedBank)))
+}
+#Summing sigma (wi*Xi)
+for(i in 1:length(BankSetPerLatent)){
+for(j in 1:length(WeightsPerLatent[[i]])){
+Y[[i]] = Y[[i]] + WeightsPerLatent[[i]][j]*BankSetPerLatent[[i]][,j]
+}
+}
+sum(ImputedBank[1,c(1:5)])*0.0417
+MatrixOfe = cor(Y)
+MatrixOfYs = do.call(rbind, Y)
+MatrixOfYs
+Cor(MatrixOfYs)
+cor(MatrixOfYs)
+ncol(MatrixOfYs)
+ncol(MatrixOfYs) nrow(MatrixOfYs)
+nrow(MatrixOfYs)
+MatrixOfYs = t(do.call(rbind, Y))
+ncol(MatrixOfYs) nrow(MatrixOfYs)
+ncol(MatrixOfYs)
+nrow(MatrixOfYs)
+for(i in 1:length(BankSetPerLatent)){
+Y[[i]] = c(rep(0,nrow(ImputedBank)))
+for(j in 1:length(WeightsPerLatent[[i]])){
+Y[[i]] = Y[[i]] + WeightsPerLatent[[i]][j]*BankSetPerLatent[[i]][,j]
+}
+}
+MatrixOfYs = t(do.call(rbind, Y))
+cor(MatrixOfYs)
+rm(MatrixOfYs)
+cor(c(0.2,3,4),c(2,0.3,5))
+Y
+data.frame(x = rnorm(10, 30, .2), y = runif(10, 3, 5))
+dat <- data.frame(x = rnorm(10, 30, .2), y = runif(10, 3, 5))
+scale_dat <- scale(dat)
+mean(scale_dat)
+var(scale_dat)
+mean(scale_dat$x)
+mean(scale_dat)
+sd(scale_dat)
+scale_dat
+class(scale_dat) <- scale(dat)
+class(scale_dat)
+rm(dat, scale_dat)
+e = c(rep(0,length(Y)*(length(Y)-1)))
+#Build the inner weights ei
+e = c(rep(0,length(Y)*(length(Y)-1)))
+for(i in 1:length(Y)){
+for(j in 1:length(Y)){
+if(i!=j){
+e = c(e,cor(Y[i],Y[j]))
+}
+}
+}
+#Build the inner weights ei
+e = c(rep(0,length(Y)*(length(Y)-1)))
+for(i in 1:length(Y)){
+for(j in 1:length(Y)){
+if(i!=j){
+e = c(e,cor(Y[[i]],Y[[j]]))
+}
+}
+}
+#Build the inner weights ei
+for(i in 1:length(Y)){
+for(j in 1:length(Y)){
+if(i!=j){
+e = c(e,cor(Y[[i]],Y[[j]]))
+}
+}
+}
+e=c()
+#Build the inner weights ei
+for(i in 1:length(Y)){
+for(j in 1:length(Y)){
+if(i!=j){
+e = c(e,cor(Y[[i]],Y[[j]]))
+}
+}
+}
+e
+45%%6

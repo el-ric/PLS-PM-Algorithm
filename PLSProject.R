@@ -147,8 +147,7 @@ for(i in 1:NbLatentVariables){
 }
 
 #Temporary Vector of weights
-WeightsTemp = c(rep(1/24,24))
-
+WeightsTemp = runif(24,0,1) #c(rep(1/24,24))
 
 #************For****************************************
 
@@ -158,6 +157,7 @@ repeat{
 
 
   #List of Weights Per Latent variable
+  #Build W's
   minElement = 1
   WeightsPerLatent = list()
   for(i in 1:NbLatentVariables){
@@ -167,16 +167,16 @@ repeat{
   }
   
   #Build Y1...Yn
+  # Yi = W1X1 + ... + WiXi
   Y = list()
   for(i in 1:length(BankSetPerLatent)){
     Y[[i]] = zeroInitialize(nrow(ImputedBank))
     for(j in 1:length(WeightsPerLatent[[i]])){
       Y[[i]] = Y[[i]] + WeightsPerLatent[[i]][j]*BankSetPerLatent[[i]][,j]
     }
+    Y[[i]] = scale(Y[[i]])
   }
-  
-  InModel
-  
+
   #Build the inner weights ei
   e=c()
   for(i in 1:length(Y)){
@@ -192,10 +192,11 @@ repeat{
       
     }
   }
+  
   #Build the Zeds z
   z=list()
   for(i in 1:length(BankSetPerLatent)){
-    z[[i]] = c(rep(0,nrow(ImputedBank)))
+    z[[i]] = zeroInitialize(nrow(ImputedBank))
   }
   
   
@@ -207,6 +208,7 @@ repeat{
         aux=aux+1
       }
     }
+    z[[i]] = scale(z[[i]])
   }
   
   #UpdateWeights
@@ -217,15 +219,22 @@ repeat{
     for(j in 1:NbManifestPerLatent[i]){
       k=k+1
       WeightNewPerLatent[[i]][j] = cov(z[[i]],BankSetPerLatent[[i]][,j])
-      WeightsTempNew[k] = cov(z[[i]],BankSetPerLatent[[i]][,j])
+      
+      #List format
+      WeightsTempNew[k] = WeightNewPerLatent[[i]][j]
     }
   }
+  print(Iteration)
+  #print(WeightsTemp)
+  print(WeightsTempNew)
   
   epsilon = sqrt(sum((WeightsTempNew - WeightsTemp)^2))
+  print(epsilon)
   WeightsTemp = WeightsTempNew
   Iteration = Iteration +1
-  print(Iteration)
-  if(epsilon <= 2){
+
+  if(epsilon <= 0.00000001){
+    
     break
   }
 }

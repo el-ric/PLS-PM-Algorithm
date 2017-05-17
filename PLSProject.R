@@ -37,18 +37,25 @@ generateIdColumn <- function(dataSet){
 }
 
 imputeMissingValues <- function(dataSet,method="pmm"){
-  #Imputing missing values with pmm method and with R package of Mice
-  library(mice)
-  
-  #The data set with different imputations of missing values 
-  TempMiss = mice(dataSet, m=10, method = "pmm", maxit = 50, seed = 500 )
-  
-  #some variable imputations (each with 10 imputation values for each missing value)
-  TempMiss$imp$IMAG1
-  TempMiss$imp$IMAG2
-  
-  #Imputed bank data set with the first imputation among the 10
-  ImputedDataSet = complete(TempMiss)
+  ImputedDataSet = dataSet
+  if (method == "remove"){
+  ImputedDataSet =  dataSet[complete.cases(dataSet),]
+    }
+   if (method == "pmm"){
+  # #Imputing missing values with pmm method and with R package of Mice
+   library(mice)
+  # 
+  # #The data set with different imputations of missing values 
+   TempMiss = mice(dataSet, m=10, method = "pmm", maxit = 50, seed = 500 )
+  # 
+  # #some variable imputations (each with 10 imputation values for each missing value)
+   TempMiss$imp$IMAG1
+   TempMiss$imp$IMAG2
+  # 
+  # #Imputed bank data set with the first imputation among the 10
+   ImputedDataSet = complete(TempMiss)
+   
+   }
   ImputedDataSet = ImputedDataSet[,c(2:ncol(ImputedDataSet))]
   return(ImputedDataSet)
   
@@ -74,6 +81,31 @@ zeroInitialize <- function(rows,cols=1){
   return(newVector)
 }
 
+calculateCronbach  <- function(dataSet,numberVariables){
+  for(i in 1:numberVariables){
+    print(colnames(dataSet[[i]]))
+    res = cor(dataSet[[i]])
+    diag(res) =  zeroInitialize(ncol(dataSet[[i]]))
+    correl  = sum(res)
+    p = ncol(dataSet[[i]])
+    alpha = (correl/(p + correl)) * (p / (p - 1))
+    print (c("Alpha",colnames(dataSet[[i]]),alpha))
+    print(cronbach(dataSet[[i]]))
+  }
+}
+
+calculateDillonGoldstein  <- function(dataSet,numberVariables){
+  for(i in 1:numberVariables){
+  firstComponent = princomp(dataSet[[i]])$scores[,1]
+  
+  up = colSums(cor(dataSet[[i]],firstComponent))^2
+  down = up + colSums(1 - cor(dataSet[[i]],firstComponent)^2)
+  dg = up / down
+  print (c("DillonGoldstein",colnames(dataSet[[i]]),dg))
+  print(rho(dataSet[[i]]))
+  }
+  }
+
 ######## GLOBAL PARAMETERS ########
 
 file = "bank.csv"
@@ -90,7 +122,7 @@ printResults(bank2,"Without empty rows Bank dataset")
 bank2 = generateIdColumn(bank2)
 printResults(bank2,"Final")
 
-ImputedBank = imputeMissingValues(bank2,"pmm")
+ImputedBank = imputeMissingValues(bank2,"remove")
 printResults(ImputedBank,"ImputedBank")
 #Standardize the data
 ImputedBankStd = scale(ImputedBank)
@@ -146,6 +178,9 @@ for(i in 1:NbLatentVariables){
   minElement = minElement + NbManifestPerLatent[i]
 }
 
+#Use standarized data
+calculateCronbach(BankSetPerLatent, NbLatentVariables)
+calculateDillonGoldstein(BankSetPerLatent, NbLatentVariables)
 #Temporary Vector of weights
 WeightsTemp = runif(24,0,1) #c(rep(1/24,24))
 
@@ -226,18 +261,65 @@ repeat{
   }
   print(Iteration)
   #print(WeightsTemp)
-  print(WeightsTempNew)
-  
-  epsilon = sqrt(sum((WeightsTempNew - WeightsTemp)^2))
+  print(WeightNewPerLatent)
+  epsilon = sum((abs(WeightsTempNew) - abs(WeightsTemp))^2)
+  #epsilon = sqrt(sum((WeightsTempNew - WeightsTemp)^2))
   print(epsilon)
   WeightsTemp = WeightsTempNew
   Iteration = Iteration +1
 
-  if(epsilon <= 0.00000001){
+  if(epsilon <= 0.00001 || Iteration > 100){
     
     break
   }
 }
 #**********************************For****************************
 
+#Estimate the OLS Coefficients of the Latent Variables
+BetaList = list()
+for(i in 1:length(LatentVariables)){
+  InModelSubset = subset(InModel, InModel[,2]==LatentVariables[i])
+  X=c()
+  if(nrow(InModelSubset)!=0){
+    for(j in 1:nrow(InModelSubset)){
+      X = cbind (X,Y[[which(LatentVariables==InModelSubset[j,1])]]) #Look for the index in Latent vars
+    }
+    XY = t(X)%*%Y[[i]]
+    XXInv = solve(t(X)%*%X)
+    Beta = XXInv %*% XY
+    Beta = cbind(Beta,InModelSubset[,1])
+    BetaList[[i]] = Beta
+  }
+}
 
+#Report the OLS Coefficients in the PathCoeffs Matrix
+for(i in 1:length(BetaList)){
+  if(length(BetaList[[i]])!=0){
+    for(j in 1:nrow(BetaList[[i]])){
+      coeffIndex = which(LatentVariables==BetaList[[i]][j,2])
+      PathCoeffs[coeffIndex, i] = BetaList[[i]][j,1]
+    }
+  }
+}
+
+
+################### TEST OUTPUT FROM ORIGINAL FUNCTION #########
+?plspm
+sat_blocks <- list(1:5, 6:8, 9:17, 18:19, 20:22, 23:24)
+sat_modes <- rep("A", NbLatentVariables) 
+?lower.tri
+LatentConnections[upper.tri(LatentConnections)] <- 0
+
+plsres = plspm(ImputedBank, LatentConnections,sat_blocks,modes = sat_modes,
+               scheme = "centroid", maxiter = 100, tol = 0.000001, scaled= TRUE)
+plsres$outer_model
+plsres$inner_model
+plsres$path_coefs
+plsres$scores
+plsres$crossloading
+plsres$inner_summary
+plsres$effects
+plsres$unidim
+plsres$gof
+plsres$boot
+plsres$data

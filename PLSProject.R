@@ -94,6 +94,8 @@ calculateCronbach  <- function(dataSet,numberVariables){
   }
 }
 
+
+
 calculateDillonGoldstein  <- function(dataSet,numberVariables){
   for(i in 1:numberVariables){
   firstComponent = princomp(dataSet[[i]])$scores[,1]
@@ -117,13 +119,13 @@ bank = defineEnvironment(file_directory ,file )
 printResults(bank,"First Bank dataset")
 
 bank2 = removeEmptyRows(bank)
-printResults(bank2,"Without empty rows Bank dataset")
+#printResults(bank2,"Without empty rows Bank dataset")
 
 bank2 = generateIdColumn(bank2)
-printResults(bank2,"Final")
+#printResults(bank2,"Final")
 
 ImputedBank = imputeMissingValues(bank2,"remove")
-printResults(ImputedBank,"ImputedBank")
+#printResults(ImputedBank,"ImputedBank")
 #Standardize the data
 ImputedBankStd = scale(ImputedBank)
 
@@ -182,14 +184,13 @@ for(i in 1:NbLatentVariables){
 calculateCronbach(BankSetPerLatent, NbLatentVariables)
 calculateDillonGoldstein(BankSetPerLatent, NbLatentVariables)
 #Temporary Vector of weights
-WeightsTemp = runif(24,0,1) #c(rep(1/24,24))
+WeightsTemp = c(rep(1,24))
 
 #************For****************************************
 
 Iteration = 0
 
 repeat{
-
 
   #List of Weights Per Latent variable
   #Build W's
@@ -204,13 +205,16 @@ repeat{
   #Build Y1...Yn
   # Yi = W1X1 + ... + WiXi
   Y = list()
+  Ystd = c(rep(0,NbLatentVariables))
   for(i in 1:length(BankSetPerLatent)){
     Y[[i]] = zeroInitialize(nrow(ImputedBank))
     for(j in 1:length(WeightsPerLatent[[i]])){
       Y[[i]] = Y[[i]] + WeightsPerLatent[[i]][j]*BankSetPerLatent[[i]][,j]
     }
+    Ystd[i] = sd(Y[[i]])
     Y[[i]] = scale(Y[[i]])
   }
+  
 
   #Build the inner weights ei
   e=c()
@@ -253,7 +257,10 @@ repeat{
   for(i in 1:length(LatentVariables)){
     for(j in 1:NbManifestPerLatent[i]){
       k=k+1
+      
       WeightNewPerLatent[[i]][j] = cov(z[[i]],BankSetPerLatent[[i]][,j])
+      
+      #WeightNewPerLatent[[i]][j] = WeightNewPerLatent[[i]][j] / Ystd[i]
       
       #List format
       WeightsTempNew[k] = WeightNewPerLatent[[i]][j]
@@ -261,21 +268,25 @@ repeat{
   }
   print(Iteration)
   #print(WeightsTemp)
-  print(WeightNewPerLatent)
+  print(WeightsTempNew)
   epsilon = sum((abs(WeightsTempNew) - abs(WeightsTemp))^2)
+  
+  print( Ystd)
+  print(WeightsTempNew)
   #epsilon = sqrt(sum((WeightsTempNew - WeightsTemp)^2))
   print(epsilon)
   WeightsTemp = WeightsTempNew
   Iteration = Iteration +1
 
-  if(epsilon <= 0.00001 || Iteration > 100){
+  if(epsilon <= 0.00001 | Iteration > 100){
     
     break
   }
 }
+
 #**********************************For****************************
 
-#Estimate the OLS Coefficients of the Latent Variables
+#####Estimate the OLS Coefficients of the Latent Variables#####
 BetaList = list()
 for(i in 1:length(LatentVariables)){
   InModelSubset = subset(InModel, InModel[,2]==LatentVariables[i])
@@ -292,7 +303,7 @@ for(i in 1:length(LatentVariables)){
   }
 }
 
-#Report the OLS Coefficients in the PathCoeffs Matrix
+######Report the OLS Coefficients in the PathCoeffs Matrix#####
 for(i in 1:length(BetaList)){
   if(length(BetaList[[i]])!=0){
     for(j in 1:nrow(BetaList[[i]])){
@@ -302,15 +313,50 @@ for(i in 1:length(BetaList)){
   }
 }
 
+######Loadings######
+resultsMatrix =  matrixInitial(sum(NbManifestPerLatent),4,c("weight","loading","communality","redundancy"),ManifestVariables) 
+
+k=0
+Loadings = matrixInitial(NbLatentVariables,sum(NbManifestPerLatent),ManifestVariables,LatentVariables) 
+for(i in 1:NbLatentVariables){
+    for(j in 1:NbManifestPerLatent[i]){
+    Loadings[i,j + k] = cor(ImputedBankStd[,j+k],Y[[i]])
+    resultsMatrix[j+k,2] = Loadings[i,j + k]
+    }
+  k = k + NbManifestPerLatent[i]
+}
+
+### WEIGHT ADJUST FOR STD ######
+k=1
+Weights = matrixInitial(NbLatentVariables,NbManifestVariables,ManifestVariables,LatentVariables) 
+for(i in 1:NbLatentVariables){
+  max = k + length(WeightNewPerLatent[[i]]) -1
+  Weights[i,k:max] =  (WeightNewPerLatent[[i]] / Ystd[i])
+  resultsMatrix[k:max,1] = Weights[i,k:max]
+  k = k + NbManifestPerLatent[i]
+}
+
+
+##### PRESENT RESULTS ########
+
+results = list(w = rowSums(Weights), W = t(Weights), loadings = t(Loadings), path_coefficients = t(PathCoeffs), matrix=resultsMatrix)
+
+results$loadings
+results$W
+results$path_coefficients
+results$matrix
+
+
+
 
 ################### TEST OUTPUT FROM ORIGINAL FUNCTION #########
-?plspm
+library(plspm)
 sat_blocks <- list(1:5, 6:8, 9:17, 18:19, 20:22, 23:24)
 sat_modes <- rep("A", NbLatentVariables) 
-?lower.tri
-LatentConnections[upper.tri(LatentConnections)] <- 0
+LatentConnectionsTest = LatentConnections
+LatentConnectionsTest[upper.tri(LatentConnectionsTest)] <- 0
 
-plsres = plspm(ImputedBank, LatentConnections,sat_blocks,modes = sat_modes,
+plsres = plspm(ImputedBank, LatentConnectionsTest,sat_blocks,modes = sat_modes,
                scheme = "centroid", maxiter = 100, tol = 0.000001, scaled= TRUE)
 plsres$outer_model
 plsres$inner_model
